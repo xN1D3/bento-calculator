@@ -126,7 +126,7 @@
 
   <!-- Hero -->
   <header class="border-b border-surface-border">
-    <div class="max-w-3xl mx-auto px-6 py-12 text-center">
+    <div class="max-w-4xl mx-auto px-6 py-12 text-center">
       <p class="text-gold text-sm tracking-[0.3em] uppercase mb-4 font-medium">KK TOWN BENTO Tool</p>
       <h1 class="text-4xl font-semibold tracking-tight mb-3">Bento Calculator</h1>
       <p class="text-muted-light text-base leading-relaxed max-w-md mx-auto">
@@ -136,7 +136,7 @@
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto px-6 py-10 space-y-4">
+  <main class="max-w-4xl mx-auto px-6 py-10 space-y-4">
 
     <!-- Input: ตัวละคร -->
     <div class="bg-surface rounded-2xl border border-surface-border p-6 card-hover">
@@ -227,7 +227,7 @@
         <!-- Crafting Separately Content -->
         <div id="craft-sep-content" class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Bento 1 Crafting Separately Card -->
-          <div class="bg-ink-2 rounded-xl p-4 border border-surface-border flex flex-col justify-between">
+          <div class="bg-ink-2 rounded-xl p-5 border border-surface-border flex flex-col justify-between">
             <div>
               <p class="text-sm font-semibold text-gold mb-2 text-center font-bold">Bento 1</p>
               <div class="flex items-center justify-center gap-2 mb-3">
@@ -235,7 +235,7 @@
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
                 <input id="r-craft-b1-qty" type="number" min="0" oninput="handleSepQtyInput('b1', this.value)"
                   class="w-16 bg-ink-3 border border-surface-border rounded-lg py-1 text-center font-bold text-xl text-gold-light focus:outline-none focus:border-gold transition-colors">
-                <span class="text-xs text-muted-light">กล่อง/รอบ</span>
+                <span class="text-xs text-muted-light whitespace-nowrap">กล่อง/รอบ</span>
                 <button type="button" onclick="adjustSepQty('b1', 1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
               </div>
@@ -248,7 +248,7 @@
           </div>
 
           <!-- Bento 2 Crafting Separately Card -->
-          <div class="bg-ink-2 rounded-xl p-4 border border-surface-border flex flex-col justify-between">
+          <div class="bg-ink-2 rounded-xl p-5 border border-surface-border flex flex-col justify-between">
             <div>
               <p class="text-sm font-semibold text-gold mb-2 text-center font-bold">Bento 2</p>
               <div class="flex items-center justify-center gap-2 mb-3">
@@ -256,7 +256,7 @@
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
                 <input id="r-craft-b2-qty" type="number" min="0" oninput="handleSepQtyInput('b2', this.value)"
                   class="w-16 bg-ink-3 border border-surface-border rounded-lg py-1 text-center font-bold text-xl text-gold-light focus:outline-none focus:border-gold transition-colors">
-                <span class="text-xs text-muted-light">กล่อง/รอบ</span>
+                <span class="text-xs text-muted-light whitespace-nowrap">กล่อง/รอบ</span>
                 <button type="button" onclick="adjustSepQty('b2', 1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
               </div>
@@ -269,7 +269,7 @@
           </div>
 
           <!-- Bento 3 Crafting Separately Card -->
-          <div class="bg-ink-2 rounded-xl p-4 border border-surface-border flex flex-col justify-between">
+          <div class="bg-ink-2 rounded-xl p-5 border border-surface-border flex flex-col justify-between">
             <div>
               <p class="text-sm font-semibold text-gold mb-2 text-center font-bold">Bento 3</p>
               <div class="flex items-center justify-center gap-2 mb-3">
@@ -277,7 +277,7 @@
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
                 <input id="r-craft-b3-qty" type="number" min="0" oninput="handleSepQtyInput('b3', this.value)"
                   class="w-16 bg-ink-3 border border-surface-border rounded-lg py-1 text-center font-bold text-xl text-gold-light focus:outline-none focus:border-gold transition-colors">
-                <span class="text-xs text-muted-light">กล่อง/รอบ</span>
+                <span class="text-xs text-muted-light whitespace-nowrap">กล่อง/รอบ</span>
                 <button type="button" onclick="adjustSepQty('b3', 1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
               </div>
@@ -352,7 +352,7 @@
     </div>
   </main>
 
-  <footer class="max-w-3xl mx-auto px-6 py-8 mt-4">
+  <footer class="max-w-4xl mx-auto px-6 py-8 mt-4">
     <div class="gold-line mb-6"></div>
     <p class="text-center text-sm text-muted">Bento Calculator · ข้อมูลอาจเปลี่ยนแปลงตามการอัปเดตเซิร์ฟเวอร์</p>
   </footer>
@@ -478,7 +478,7 @@
     function createMatListRow(name, qty, isFarm, weight) {
       const unit = isFarm ? ' Pack' : '';
       return `
-    <div class="flex justify-between items-center py-1.5 border-b border-surface-border last:border-0">
+    <div class="flex justify-between items-center py-2.5 border-b border-surface-border last:border-0">
       <span class="text-muted-light">${name}</span>
       <div class="text-right">
         <span class="text-white font-medium">${fmt(qty)}${unit} <span class="text-gold-light text-xs font-normal">(${fmtW(weight)} KG)</span></span>
