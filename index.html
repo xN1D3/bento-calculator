@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bento Calculator — FiveM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Noto Sans Thai', 'sans-serif'] },
+          colors: {
+            gold: { DEFAULT: '#D9BC68', light: '#F0D78F', dark: '#8B6914' },
+            ink: { DEFAULT: '#0F0F0F', 2: '#1A1A1A', 3: '#242424' },
+            muted: { DEFAULT: '#A8A8A8', light: '#C4C4C4' },
+            surface: { DEFAULT: '#1C1C1C', raised: '#222222', border: '#3A3A3A' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0F0F0F;
+      background-image:
+        radial-gradient(circle at 50% -10%, rgba(201, 168, 76, 0.10), transparent 45%),
+        radial-gradient(circle at 0% 100%, rgba(201, 168, 76, 0.05), transparent 40%),
+        linear-gradient(180deg, #131210 0%, #0F0F0F 40%, #0B0B0B 100%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    ::placeholder {
+      color: #6B6B6B;
+      opacity: 1;
+    }
+
+    .gold-line {
+      background: linear-gradient(90deg, transparent, #D9BC68, transparent);
+      height: 1px;
+    }
+
+    .card-hover {
+      transition: border-color 0.2s ease;
+    }
+
+    .card-hover:hover {
+      border-color: #D9BC6850;
+    }
+
+    .result-section {
+      animation: fadeUp 0.3s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1A1A1A;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #3A3A3A;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-white font-sans">
+
+
+
+  <!-- ===== POPUP เตือนกรอกข้อมูลไม่ครบ ===== -->
+  <div id="warn-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4"
+    style="background:rgba(0,0,0,0.78); backdrop-filter:blur(6px);">
+    <div class="bg-surface border border-gold/40 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl"
+      style="animation:fadeUp 0.3s ease forwards;">
+      <div class="flex items-center gap-2 px-6 pt-5 pb-3 border-b border-surface-border">
+        <span class="text-gold text-lg">⚠️</span>
+        <p class="text-gold font-semibold text-base tracking-wide">กรอกข้อมูลไม่ครบ</p>
+      </div>
+      <div class="px-6 py-5">
+        <p class="text-muted-light text-base leading-relaxed">
+          กรุณากรอกข้อมูลให้ครบทุกช่อง<br>(น้ำหนักตัว, น้ำหนักรถ, จำนวนชุด)
+        </p>
+      </div>
+      <div class="px-6 pb-6">
+        <button onclick="closeWarn()"
+          class="w-full py-3 rounded-xl border border-gold bg-gold text-ink font-semibold text-base hover:bg-gold-light transition-all active:scale-[0.98]">
+          เข้าใจแล้ว
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <header class="border-b border-surface-border">
+    <div class="max-w-3xl mx-auto px-6 py-12 text-center">
+      <p class="text-gold text-sm tracking-[0.3em] uppercase mb-4 font-medium">KK TOWN BENTO Tool</p>
+      <h1 class="text-4xl font-semibold tracking-tight mb-3">Bento Calculator</h1>
+      <p class="text-muted-light text-base leading-relaxed max-w-md mx-auto">
+        คำนวณวัตถุดิบ การแพ็ค และรางวัลจากการทำเบนโตะ<br>ใส่ข้อมูลแล้วกดคำนวณได้เลย
+      </p>
+      <div class="gold-line mt-8 max-w-xs mx-auto"></div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-6 py-10 space-y-4">
+
+    <!-- Input: ตัวละคร -->
+    <div class="bg-surface rounded-2xl border border-surface-border p-6 card-hover">
+      <p class="text-sm text-muted-light tracking-widest uppercase mb-5 font-medium">ตั้งค่าตัวละครและรถ</p>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-muted-light mb-2">น้ำหนักตัว (KG)</label>
+          <input id="bw" type="number" placeholder="เช่น 30.2" step="0.1" min="1"
+            class="w-full bg-ink-2 border border-surface-border rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-gold transition-colors">
+        </div>
+        <div>
+          <label class="block text-sm text-muted-light mb-2">น้ำหนักรถ (KG)</label>
+          <input id="cw" type="number" placeholder="เช่น 1000" min="1"
+            class="w-full bg-ink-2 border border-surface-border rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-gold transition-colors">
+        </div>
+      </div>
+    </div>
+
+    <!-- Input: จำนวนชุด -->
+    <div class="bg-surface rounded-2xl border border-surface-border p-6 card-hover">
+      <p class="text-sm text-muted-light tracking-widest uppercase mb-5 font-medium">จำนวนชุดที่ต้องการทำ</p>
+      <div class="grid grid-cols-2 gap-4 items-end">
+        <div>
+          <label class="block text-sm text-muted-light mb-2">จำนวนชุด (1 ชุด = Bento 1+2+3)</label>
+          <input id="sets" type="number" placeholder="เช่น 100" min="1"
+            class="w-full bg-ink-2 border border-surface-border rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-gold transition-colors">
+        </div>
+        <p class="text-sm text-muted-light leading-relaxed pb-1">
+          ส่งสูงสุด <span class="text-gold-light font-medium">100 ชุด/วัน</span><br>
+          = 1,000,000 KKD + 100 Coins
+        </p>
+      </div>
+    </div>
+
+    <!-- Button -->
+    <button onclick="calculate()"
+      class="w-full py-4 rounded-2xl border border-gold text-gold font-semibold text-base tracking-wide hover:bg-gold hover:text-ink transition-all duration-200 active:scale-[0.99]">
+      คำนวณ
+    </button>
+
+    <!-- Results -->
+    <div id="results" class="hidden space-y-4">
+
+      <!-- วัตถุดิบที่ต้องฟาร์ม -->
+      <div class="result-section bg-surface rounded-2xl border border-surface-border p-6">
+        <p class="text-sm text-muted-light tracking-widest uppercase mb-5 font-medium">วัตถุดิบที่ต้องฟาร์ม (รวมทุก
+          Bento)</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-base">
+            <thead>
+              <tr class="border-b border-surface-border">
+                <th class="text-center text-sm text-muted-light font-medium pb-3">วัตถุดิบ</th>
+                <th class="text-center text-sm text-muted-light font-medium pb-3">จำนวนที่ต้องฟาร์ม</th>
+                <th class="text-center text-sm text-muted-light font-medium pb-3">Pack ที่ได้</th>
+                <th class="text-center text-sm text-muted-light font-medium pb-3">ใช้ใน</th>
+              </tr>
+            </thead>
+            <tbody id="mat-tbody" class="divide-y divide-surface-border"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- สรุปแต่ละ Bento -->
+      <div class="result-section bg-surface rounded-2xl border border-surface-border p-6">
+        <p class="text-sm text-muted-light tracking-widest uppercase mb-5 font-medium">สรุปแต่ละเบนโตะ</p>
+        <div id="bento-cards" class="grid grid-cols-3 gap-3"></div>
+        <p class="mt-4 text-sm text-muted-light leading-relaxed border-l-2 border-gold pl-3 py-3 pr-4 rounded-r-lg"
+          style="background:rgba(201,168,76,0.07);">
+          น้ำตาล เกลือ และซอส สามารถซื้อได้จากหน้าตู้ขายใน Bento Zone<br>จะไม่ถูกคิดรวมกับส่วนประกอบที่ได้จากการฟาร์ม
+        </p>
+      </div>
+
+      <!-- วัตถุดิบที่ต้องหิ้วไปคราฟต่อรอบ -->
+      <div class="result-section bg-surface rounded-2xl border border-surface-border p-6">
+        <p class="text-sm text-muted-light tracking-widest uppercase mb-4 font-medium text-center md:text-left">
+          วัตถุดิบที่ต้องหิ้วไปคราฟต่อรอบ (คำนวณตามน้ำหนักตัว)</p>
+
+        <!-- Tab/Toggle for Crafting Mode (คราฟแยกแต่ละ Bento / คราฟแบบจัดชุด) -->
+        <div class="flex gap-2 p-1 bg-ink-2 border border-surface-border rounded-xl mb-6 max-w-md mx-auto md:mx-0">
+          <button id="tab-craft-sep" onclick="toggleCraftMode('sep')"
+            class="flex-1 py-2 text-sm font-semibold rounded-lg bg-gold text-ink transition-all">คราฟแยกแต่ละ
+            Bento</button>
+          <button id="tab-craft-set" onclick="toggleCraftMode('set')"
+            class="flex-1 py-2 text-sm font-semibold rounded-lg text-muted-light hover:text-white transition-all">คราฟแบบจัดชุด
+            (Bento 1+2+3)</button>
+        </div>
+
+        <!-- Crafting Separately Content -->
+        <div id="craft-sep-content" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Bento 1 Crafting Separately Card -->
+          <div class="bg-ink-2 rounded-xl p-4 border border-surface-border flex flex-col justify-between">
+            <div>
+              <p class="text-sm font-semibold text-gold mb-2 text-center font-bold">Bento 1</p>
+              <div class="flex items-center justify-center gap-2 mb-3">
+                <button type="button" onclick="adjustSepQty('b1', -1)"
+                  class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
+                <span id="r-craft-b1-qty"
+                  class="text-2xl font-bold text-center text-gold-light min-w-8 select-none">0</span>
+                <span class="text-xs text-muted-light">กล่อง/รอบ</span>
+                <button type="button" onclick="adjustSepQty('b1', 1)"
+                  class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
+              </div>
+              <div id="craft-b1-items" class="space-y-2 text-sm">
+                <!-- Bento 1 items -->
+              </div>
+            </div>
+            <p id="r-craft-b1-weight"
+              class="text-xs text-muted-light text-center mt-3 pt-2 border-t border-surface-border">-</p>
+          </div>
+
+          <!-- Bento 2 Crafting Separately Card -->
+          <div class="bg-ink-2 rounded-xl p-4 border border-surface-border flex flex-col justify-between">
+            <div>
+              <p class="text-sm font-semibold text-gold mb-2 text-center font-bold">Bento 2</p>
+              <div class="flex items-center justify-center gap-2 mb-3">
+                <button type="button" onclick="adjustSepQty('b2', -1)"
+                  class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
+                <span id="r-craft-b2-qty"
+                  class="text-2xl font-bold text-center text-gold-light min-w-8 select-none">0</span>
+                <span class="text-xs text-muted-light">กล่อง/รอบ</span>
+                <button type="button" onclick="adjustSepQty('b2', 1)"
+                  class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
+              </div>
+              <div id="craft-b2-items" class="space-y-2 text-sm">
+                <!-- Bento 2 items -->
+              </div>
+            </div>
+            <p id="r-craft-b2-weight"
+              class="text-xs text-muted-light text-center mt-3 pt-2 border-t border-surface-border">-</p>
+          </div>
+
+          <!-- Bento 3 Crafting Separately Card -->
+          <div class="bg-ink-2 rounded-xl p-4 border border-surface-border flex flex-col justify-between">
+            <div>
+              <p class="text-sm font-semibold text-gold mb-2 text-center font-bold">Bento 3</p>
+              <div class="flex items-center justify-center gap-2 mb-3">
+                <button type="button" onclick="adjustSepQty('b3', -1)"
+                  class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
+                <span id="r-craft-b3-qty"
+                  class="text-2xl font-bold text-center text-gold-light min-w-8 select-none">0</span>
+                <span class="text-xs text-muted-light">กล่อง/รอบ</span>
+                <button type="button" onclick="adjustSepQty('b3', 1)"
+                  class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
+              </div>
+              <div id="craft-b3-items" class="space-y-2 text-sm">
+                <!-- Bento 3 items -->
+              </div>
+            </div>
+            <p id="r-craft-b3-weight"
+              class="text-xs text-muted-light text-center mt-3 pt-2 border-t border-surface-border">-</p>
+          </div>
+        </div>
+
+        <!-- Crafting by Set Content -->
+        <div id="craft-set-content" class="hidden space-y-4">
+          <div class="bg-ink-2 rounded-xl p-5 border border-surface-border text-center">
+            <p class="text-sm text-muted-light mb-1">คราฟได้สูงสุดต่อรอบ</p>
+            <p id="r-craft-set-qty" class="text-3xl font-semibold text-gold">- ชุด/รอบ</p>
+            <p id="r-craft-set-weight-info" class="text-sm text-muted-light mt-2">-</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-light mb-3 text-center md:text-left uppercase font-medium tracking-wider">
+              รายการของที่ต้องพก (น้ำหนักรวมพอดีตัว)</p>
+            <div id="craft-set-items" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              <!-- Dynamic items for crafting sets -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- รายละเอียดการส่ง -->
+      <div class="result-section bg-surface rounded-2xl border border-surface-border p-6">
+        <p class="text-sm text-muted-light tracking-widest uppercase mb-5 font-medium">รายละเอียดการส่ง</p>
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-ink-2 rounded-xl p-4 text-center border border-surface-border">
+            <p class="text-sm text-muted-light mb-2">ส่งได้ต่อรอบ</p>
+            <p id="r-per-trip" class="text-2xl font-semibold">-</p>
+            <p class="text-sm text-muted-light mt-1">ชุด/รอบ</p>
+          </div>
+          <div class="bg-ink-2 rounded-xl p-4 text-center border border-surface-border">
+            <p class="text-sm text-muted-light mb-2">รอบส่งทั้งหมด</p>
+            <p id="r-delivery-trips" class="text-2xl font-semibold">-</p>
+            <p class="text-sm text-muted-light mt-1">รอบ</p>
+          </div>
+          <div class="bg-ink-2 rounded-xl p-4 text-center border border-surface-border">
+            <p class="text-sm text-muted-light mb-2">จำนวนชุดทั้งหมด</p>
+            <p id="r-total-sets" class="text-2xl font-semibold">-</p>
+            <p class="text-sm text-muted-light mt-1">ชุด</p>
+          </div>
+        </div>
+        <div id="r-days-warn"
+          class="hidden mt-4 text-sm text-muted-light leading-relaxed border-l-2 border-gold pl-3 py-3 pr-4 rounded-r-lg"
+          style="background:rgba(201,168,76,0.07);"></div>
+      </div>
+
+      <!-- สรุปรางวัล -->
+      <div class="result-section bg-surface rounded-2xl border border-surface-border p-6">
+        <p class="text-sm text-muted-light tracking-widest uppercase mb-5 font-medium">สรุปรางวัล</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-ink-2 rounded-xl p-5 border border-surface-border">
+            <p class="text-sm text-muted-light mb-3">KKD รวมทั้งหมด</p>
+            <p id="r-total-kkd" class="text-3xl font-semibold text-gold">-</p>
+            <p id="r-kkd-note" class="text-sm text-muted-light mt-2">-</p>
+          </div>
+          <div class="bg-ink-2 rounded-xl p-5 border border-surface-border">
+            <p class="text-sm text-muted-light mb-3">Bento Coins รวม</p>
+            <p id="r-coins" class="text-3xl font-semibold text-gold-light">-</p>
+            <p id="r-coins-note" class="text-sm text-muted-light mt-2">-</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="max-w-3xl mx-auto px-6 py-8 mt-4">
+    <div class="gold-line mb-6"></div>
+    <p class="text-center text-sm text-muted">Bento Calculator · ข้อมูลอาจเปลี่ยนแปลงตามการอัปเดตเซิร์ฟเวอร์</p>
+  </footer>
+
+  <script>
+    function closeWarn() {
+      document.getElementById('warn-modal').classList.add('hidden');
+    }
+
+    function loadSavedInputs() {
+      const savedBw = localStorage.getItem('bento_bw');
+      const savedCw = localStorage.getItem('bento_cw');
+      const savedSets = localStorage.getItem('bento_sets');
+      if (savedBw) document.getElementById('bw').value = savedBw;
+      if (savedCw) document.getElementById('cw').value = savedCw;
+      if (savedSets) document.getElementById('sets').value = savedSets;
+      if (savedBw && savedCw && savedSets) {
+        calculate();
+      }
+    }
+
+    // Tab switching for Crafting mode
+    let currentCraftMode = 'sep';
+    let currentSepQties = { b1: 0, b2: 0, b3: 0 };
+
+    function toggleCraftMode(mode) {
+      currentCraftMode = mode;
+      const tabSet = document.getElementById('tab-craft-set');
+      const tabSep = document.getElementById('tab-craft-sep');
+      const contentSet = document.getElementById('craft-set-content');
+      const contentSep = document.getElementById('craft-sep-content');
+
+      if (mode === 'set') {
+        tabSet.className = 'flex-1 py-2 text-sm font-semibold rounded-lg bg-gold text-ink transition-all';
+        tabSep.className = 'flex-1 py-2 text-sm font-semibold rounded-lg text-muted-light hover:text-white transition-all';
+        contentSet.classList.remove('hidden');
+        contentSep.classList.add('hidden');
+      } else {
+        tabSet.className = 'flex-1 py-2 text-sm font-semibold rounded-lg text-muted-light hover:text-white transition-all';
+        tabSep.className = 'flex-1 py-2 text-sm font-semibold rounded-lg bg-gold text-ink transition-all';
+        contentSet.classList.add('hidden');
+        contentSep.classList.remove('hidden');
+      }
+    }
+
+    function adjustSepQty(key, delta) {
+      currentSepQties[key] = Math.max(0, currentSepQties[key] + delta);
+      renderSepBentoCard(key);
+    }
+
+    function renderSepBentoCard(key) {
+      const qty = currentSepQties[key];
+      const bw = parseFloat(document.getElementById('bw').value) || 0;
+
+      const recipes = {
+        b1: { wood: 2, rice: 2, pork: 2, milk: 1, sauce: 1 },
+        b2: { wood: 2, papaya: 2, grape: 2, milk: 1, sugar: 3, salt: 1 },
+        b3: { wood: 2, rice: 2, milk: 2, crab: 1, sauce: 1, sugar: 1 }
+      };
+      const ITEM_WEIGHTS = {
+        wood: 0.2, rice: 0.2, milk: 0.2, pork: 0.2, papaya: 0.2, grape: 0.2, crab: 0.2,
+        salt: 0.1, sauce: 0.25, sugar: 0.1
+      };
+      const MAT_NAMES = {
+        wood: 'ไม้', rice: 'ข้าว', milk: 'นม', pork: 'หมู', papaya: 'มะละกอ', grape: 'องุ่น', crab: 'ปู',
+        sauce: 'ซอส', sugar: 'น้ำตาล', salt: 'เกลือ'
+      };
+
+      const recipe = recipes[key];
+      const wRecipe = Object.entries(recipe).reduce((sum, [mat, rQty]) => sum + (rQty * ITEM_WEIGHTS[mat]), 0);
+
+      const actualW = qty * wRecipe;
+      const isOverweight = actualW > bw;
+
+      let html = '';
+      const isFarmList = key === 'b1' ? ['wood', 'rice', 'milk', 'pork'] : (key === 'b2' ? ['wood', 'milk', 'papaya', 'grape'] : ['wood', 'rice', 'milk', 'crab']);
+      for (const [mat, recipeQty] of Object.entries(recipe)) {
+        const totalQty = recipeQty * qty;
+        const isFarm = isFarmList.includes(mat);
+        html += createMatListRow(MAT_NAMES[mat] || mat, totalQty, isFarm, totalQty * ITEM_WEIGHTS[mat]);
+      }
+
+      document.getElementById(`craft-${key}-items`).innerHTML = html;
+
+      const weightSpan = document.getElementById(`r-craft-${key}-weight`);
+      if (isOverweight) {
+        weightSpan.innerHTML = `<span class="text-red-400 font-medium">น้ำหนักรวม: ${fmtW(actualW)} / ${fmtW(bw)} KG (เกินมา ${fmtW(actualW - bw)} KG)</span>`;
+      } else {
+        weightSpan.innerHTML = `<span>น้ำหนักรวม: ${fmtW(actualW)} / ${fmtW(bw)} KG (เหลือ ${fmtW(bw - actualW)} KG)</span>`;
+      }
+
+      document.getElementById(`r-craft-${key}-qty`).textContent = qty;
+    }
+
+    // UI Creators for crafting items
+    function createMatGridItem(name, qty, isFarm, itemWeight) {
+      const w = qty * itemWeight;
+      const unit = isFarm ? 'Pack' : '';
+      return `
+    <div class="bg-ink-3 border border-surface-border rounded-xl p-3 flex flex-col justify-between card-hover">
+      <div class="flex justify-between items-start mb-1 gap-1">
+        <span class="text-white font-medium text-sm truncate">${name}</span>
+        <span class="text-xs text-gold-light whitespace-nowrap">${fmtW(w)} KG</span>
+      </div>
+      <div class="text-white font-semibold text-base mt-2">
+        ${fmt(qty)} <span class="text-xs text-muted-light font-normal">${unit}</span>
+      </div>
+    </div>`;
+    }
+
+    function createMatListRow(name, qty, isFarm, weight) {
+      const unit = isFarm ? ' Pack' : '';
+      return `
+    <div class="flex justify-between items-center py-1.5 border-b border-surface-border last:border-0">
+      <span class="text-muted-light">${name}</span>
+      <div class="text-right">
+        <span class="text-white font-medium">${fmt(qty)}${unit} <span class="text-gold-light text-xs font-normal">(${fmtW(weight)} KG)</span></span>
+      </div>
+    </div>`;
+    }
+
+    const RECIPES = {
+      b1: { name: 'Bento 1', farm: { wood: 2, rice: 2, pork: 2, milk: 1 }, buy: { sauce: 1 }, cash: 50 },
+      b2: { name: 'Bento 2', farm: { wood: 2, papaya: 2, grape: 2, milk: 1 }, buy: { sugar: 3, salt: 1 }, cash: 50 },
+      b3: { name: 'Bento 3', farm: { wood: 2, rice: 2, milk: 2, crab: 1 }, buy: { sauce: 1, sugar: 1 }, cash: 50 }
+    };
+    const MAT_NAMES = { wood: 'ไม้', rice: 'ข้าว', milk: 'นม', pork: 'หมู', papaya: 'มะละกอ', grape: 'องุ่น', crab: 'ปู', sauce: 'ซอส', sugar: 'น้ำตาล', salt: 'เกลือ' };
+    const RAW_WEIGHT = 0.2, CRAFT_INPUT = 4, PACK_RATIO = 2;
+    const BENTO_WEIGHT = 1, BENTO_PER_SET = 3;
+    const KKD_PER_SET = 10000, COINS_PER_SET = 1, MAX_PER_DAY = 100;
+
+    function fmt(n) { return Math.round(n).toLocaleString('th-TH') }
+    function fmtW(w) { return parseFloat(w).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
+
+    function calculate() {
+      const bw = parseFloat(document.getElementById('bw').value);
+      const cw = parseFloat(document.getElementById('cw').value);
+      const sets = parseInt(document.getElementById('sets').value);
+
+      if (!(bw > 0) || !(cw > 0) || !(sets > 0)) {
+        document.getElementById('warn-modal').classList.remove('hidden');
+        return;
+      }
+
+      // Save values to localStorage for persistence
+      localStorage.setItem('bento_bw', bw);
+      localStorage.setItem('bento_cw', cw);
+      localStorage.setItem('bento_sets', sets);
+
+      const setsPerTrip = Math.floor(bw / (BENTO_PER_SET * BENTO_WEIGHT));
+      const deliveryTrips = setsPerTrip > 0 ? Math.ceil(sets / setsPerTrip) : sets;
+
+      const matNeeded = {}, usedIn = {};
+      for (const [, b] of Object.entries(RECIPES)) {
+        for (const [mat, packs] of Object.entries(b.farm)) {
+          const raw = packs * (CRAFT_INPUT / PACK_RATIO) * sets;
+          matNeeded[mat] = (matNeeded[mat] || 0) + raw;
+          usedIn[mat] = (usedIn[mat] || []).concat(b.name);
+        }
+      }
+
+      const totalKKD = sets * KKD_PER_SET;
+      const totalCoins = sets * COINS_PER_SET;
+      const days = Math.ceil(sets / MAX_PER_DAY);
+
+      document.getElementById('r-per-trip').textContent = fmt(setsPerTrip);
+      document.getElementById('r-delivery-trips').textContent = fmt(deliveryTrips);
+      document.getElementById('r-total-sets').textContent = fmt(sets);
+
+      const dw = document.getElementById('r-days-warn');
+      if (sets > MAX_PER_DAY) {
+        dw.classList.remove('hidden');
+        dw.textContent = `ส่งสูงสุด ${MAX_PER_DAY} ชุด/วัน — ${fmt(sets)} ชุดนี้ต้องใช้เวลา ${days} วัน`;
+      } else {
+        dw.classList.add('hidden');
+      }
+
+      document.getElementById('r-total-kkd').textContent = fmt(totalKKD) + ' KKD';
+      document.getElementById('r-kkd-note').textContent = sets > MAX_PER_DAY
+        ? `${fmt(MAX_PER_DAY * KKD_PER_SET)} KKD/วัน เป็นเวลา ${days} วัน`
+        : 'ส่งได้ภายใน 1 วัน';
+      document.getElementById('r-coins').textContent = fmt(totalCoins) + ' Coins';
+      document.getElementById('r-coins-note').textContent = sets > MAX_PER_DAY
+        ? `${MAX_PER_DAY} Coins/วัน เป็นเวลา ${days} วัน`
+        : `ได้ ${fmt(totalCoins)} Coins วันนี้`;
+
+      const tbody = document.getElementById('mat-tbody');
+      tbody.innerHTML = '';
+      for (const [mat, raw] of Object.entries(matNeeded)) {
+        const packs = raw * (PACK_RATIO / CRAFT_INPUT);
+        const uses = [...new Set(usedIn[mat])].map(u => `<span class="inline-block text-sm bg-ink-3 border border-surface-border rounded-md px-2 py-0.5 text-muted-light">${u}</span>`).join(' ');
+        tbody.innerHTML += `
+      <tr class="border-b border-surface-border last:border-0">
+        <td class="py-3 text-center text-white">${MAT_NAMES[mat] || mat}</td>
+        <td class="py-3 text-center text-white">${fmt(raw)} ชิ้น</td>
+        <td class="py-3 text-center text-gold-light">${fmt(packs)} Pack</td>
+        <td class="py-3 text-center">${uses}</td>
+      </tr>`;
+      }
+
+      const bc = document.getElementById('bento-cards');
+      bc.innerHTML = '';
+      for (const b of Object.values(RECIPES)) {
+        let rows = '';
+        for (const [mat, packs] of Object.entries(b.farm)) {
+          const totalPacks = packs * sets;
+          rows += `<div class="flex justify-between text-sm py-1.5 border-b border-surface-border last:border-0">
+        <span class="text-muted-light">${MAT_NAMES[mat] || mat}</span>
+        <span class="text-white font-medium">${fmt(totalPacks)} <span class="text-muted-light font-normal text-xs">Pack</span></span>
+      </div>`;
+        }
+        let buyRows = '';
+        if (b.buy) {
+          for (const [mat, qty] of Object.entries(b.buy)) {
+            buyRows += `<div class="flex justify-between text-sm py-1.5">
+          <span class="text-muted-light">${MAT_NAMES[mat] || mat}</span>
+          <span class="text-white font-medium">${fmt(qty * sets)} <span class="text-muted-light font-normal text-xs">ชิ้น</span></span>
+        </div>`;
+          }
+        }
+        bc.innerHTML += `<div class="bg-ink-2 rounded-xl p-4 border border-surface-border card-hover">
+      <p class="text-sm font-semibold text-gold mb-3 text-center">${b.name} <span class="text-muted-light font-normal">×${fmt(sets)}</span></p>
+      <p class="text-xs text-muted-light mb-1 text-center">วัตถุดิบฟาร์ม</p>
+      ${rows}
+      <p class="text-xs text-muted-light mt-3 mb-1 text-center">ซื้อจากตู้</p>
+      ${buyRows}
+      <div class="flex justify-between text-sm pt-3 mt-2 border-t border-surface-border">
+        <span class="text-gold-light">เงินที่ต้องใช้</span>
+        <span class="text-gold-light font-semibold">${fmt(b.cash * sets)} KKD</span>
+      </div>
+    </div>`;
+      }
+
+      // --- NEW: CALCULATE CARRY CAPACITY PER CRAFT TRIP ---
+      const ITEM_WEIGHTS = {
+        wood: 0.2, rice: 0.2, milk: 0.2, pork: 0.2, papaya: 0.2, grape: 0.2, crab: 0.2,
+        salt: 0.1, sauce: 0.25, sugar: 0.1
+      };
+
+      // Recipes defined in Packs for farm items, and items for bought items
+      const b1Raw = { wood: 2, rice: 2, pork: 2, milk: 1, sauce: 1 };
+      const b2Raw = { wood: 2, papaya: 2, grape: 2, milk: 1, sugar: 3, salt: 1 };
+      const b3Raw = { wood: 2, rice: 2, milk: 2, crab: 1, sauce: 1, sugar: 1 };
+
+      const getRecipeWeight = (recipe) => {
+        return Object.entries(recipe).reduce((sum, [mat, qty]) => sum + (qty * ITEM_WEIGHTS[mat]), 0);
+      };
+
+      const wB1 = getRecipeWeight(b1Raw);     // 1.65
+      const wB2 = getRecipeWeight(b2Raw);     // 1.80
+      const wB3 = getRecipeWeight(b3Raw);     // 1.75
+      const wSet = wB1 + wB2 + wB3;           // 5.20 (Wood:6x0.2=1.2, Rice:4x0.2=0.8, Milk:4x0.2=0.8, Pork:2x0.2=0.4, Papaya:2x0.2=0.4, Grape:2x0.2=0.4, Crab:1x0.2=0.2, Sauce:2x0.25=0.5, Sugar:4x0.1=0.4, Salt:1x0.1=0.1)
+
+      // A. Crafting in Sets
+      const setsPerCraftTrip = Math.floor(bw / wSet);
+      const rCraftSetQty = document.getElementById('r-craft-set-qty');
+      const rCraftSetWeightInfo = document.getElementById('r-craft-set-weight-info');
+      const craftSetItems = document.getElementById('craft-set-items');
+
+      if (setsPerCraftTrip === 0) {
+        rCraftSetQty.textContent = "0 ชุด/รอบ";
+        rCraftSetWeightInfo.innerHTML = `<span class="text-red-400 font-medium">น้ำหนักตัวไม่พอพกวัตถุดิบคราฟ 1 ชุด (ต้องการอย่างน้อย ${fmtW(wSet)} KG)</span>`;
+        craftSetItems.innerHTML = `<div class="col-span-full py-4 text-center text-muted-light">ไม่มีรายการวัตถุดิบเนื่องจากน้ำหนักตัวไม่เพียงพอ</div>`;
+      } else {
+        rCraftSetQty.textContent = `${fmt(setsPerCraftTrip)} ชุด/รอบ`;
+        const actualW = setsPerCraftTrip * wSet;
+        rCraftSetWeightInfo.textContent = `น้ำหนักวัตถุดิบรวม: ${fmtW(actualW)} / ${fmtW(bw)} KG (เหลือพื้นที่ว่าง ${fmtW(bw - actualW)} KG)`;
+
+        const setMatList = {};
+        const recipes = [b1Raw, b2Raw, b3Raw];
+        for (const r of recipes) {
+          for (const [mat, qty] of Object.entries(r)) {
+            setMatList[mat] = (setMatList[mat] || 0) + (qty * setsPerCraftTrip);
+          }
+        }
+
+        let itemsHtml = '';
+        // Show in specific order
+        const matOrder = ['wood', 'rice', 'milk', 'pork', 'papaya', 'grape', 'crab', 'sauce', 'sugar', 'salt'];
+        for (const mat of matOrder) {
+          if (setMatList[mat]) {
+            const qty = setMatList[mat];
+            const isFarm = ['wood', 'rice', 'milk', 'pork', 'papaya', 'grape', 'crab'].includes(mat);
+            itemsHtml += createMatGridItem(MAT_NAMES[mat] || mat, qty, isFarm, ITEM_WEIGHTS[mat]);
+          }
+        }
+        craftSetItems.innerHTML = itemsHtml;
+      }
+
+      // B. Separate Bento Crafting
+      currentSepQties.b1 = Math.floor(bw / wB1);
+      currentSepQties.b2 = Math.floor(bw / wB2);
+      currentSepQties.b3 = Math.floor(bw / wB3);
+
+      renderSepBentoCard('b1');
+      renderSepBentoCard('b2');
+      renderSepBentoCard('b3');
+
+      document.getElementById('results').classList.remove('hidden');
+    }
+
+    loadSavedInputs();
+  </script>
+</body>
+
+</html>
