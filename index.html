@@ -233,8 +233,8 @@
               <div class="flex items-center justify-center gap-2 mb-3">
                 <button type="button" onclick="adjustSepQty('b1', -1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
-                <span id="r-craft-b1-qty"
-                  class="text-2xl font-bold text-center text-gold-light min-w-8 select-none">0</span>
+                <input id="r-craft-b1-qty" type="number" min="0" oninput="handleSepQtyInput('b1', this.value)"
+                  class="w-16 bg-ink-3 border border-surface-border rounded-lg py-1 text-center font-bold text-xl text-gold-light focus:outline-none focus:border-gold transition-colors">
                 <span class="text-xs text-muted-light">กล่อง/รอบ</span>
                 <button type="button" onclick="adjustSepQty('b1', 1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
@@ -254,8 +254,8 @@
               <div class="flex items-center justify-center gap-2 mb-3">
                 <button type="button" onclick="adjustSepQty('b2', -1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
-                <span id="r-craft-b2-qty"
-                  class="text-2xl font-bold text-center text-gold-light min-w-8 select-none">0</span>
+                <input id="r-craft-b2-qty" type="number" min="0" oninput="handleSepQtyInput('b2', this.value)"
+                  class="w-16 bg-ink-3 border border-surface-border rounded-lg py-1 text-center font-bold text-xl text-gold-light focus:outline-none focus:border-gold transition-colors">
                 <span class="text-xs text-muted-light">กล่อง/รอบ</span>
                 <button type="button" onclick="adjustSepQty('b2', 1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
@@ -275,8 +275,8 @@
               <div class="flex items-center justify-center gap-2 mb-3">
                 <button type="button" onclick="adjustSepQty('b3', -1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">-</button>
-                <span id="r-craft-b3-qty"
-                  class="text-2xl font-bold text-center text-gold-light min-w-8 select-none">0</span>
+                <input id="r-craft-b3-qty" type="number" min="0" oninput="handleSepQtyInput('b3', this.value)"
+                  class="w-16 bg-ink-3 border border-surface-border rounded-lg py-1 text-center font-bold text-xl text-gold-light focus:outline-none focus:border-gold transition-colors">
                 <span class="text-xs text-muted-light">กล่อง/รอบ</span>
                 <button type="button" onclick="adjustSepQty('b3', 1)"
                   class="w-8 h-8 rounded-lg bg-ink-3 text-white border border-surface-border hover:bg-gold hover:text-ink transition-all font-bold text-lg select-none flex items-center justify-center">+</button>
@@ -403,6 +403,15 @@
       renderSepBentoCard(key);
     }
 
+    function handleSepQtyInput(key, val) {
+      let parsed = parseInt(val);
+      if (isNaN(parsed) || parsed < 0) {
+        parsed = 0;
+      }
+      currentSepQties[key] = parsed;
+      renderSepBentoCard(key);
+    }
+
     function renderSepBentoCard(key) {
       const qty = currentSepQties[key];
       const bw = parseFloat(document.getElementById('bw').value) || 0;
@@ -444,7 +453,10 @@
         weightSpan.innerHTML = `<span>น้ำหนักรวม: ${fmtW(actualW)} / ${fmtW(bw)} KG (เหลือ ${fmtW(bw - actualW)} KG)</span>`;
       }
 
-      document.getElementById(`r-craft-${key}-qty`).textContent = qty;
+      const inputEl = document.getElementById(`r-craft-${key}-qty`);
+      if (document.activeElement !== inputEl) {
+        inputEl.value = qty;
+      }
     }
 
     // UI Creators for crafting items
